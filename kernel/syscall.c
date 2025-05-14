@@ -102,6 +102,9 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 extern uint64 sys_kbdint(void);
+extern uint64 sys_countsyscall(void);
+extern uint64 sys_getppid(void);
+extern uint64 sys_datetime(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -128,13 +131,20 @@ static uint64 (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_kbdint]  sys_kbdint,
+[SYS_countsyscall]  sys_countsyscall,
+[SYS_getppid]  sys_getppid,
+[SYS_datetime]  sys_datetime,
 };
+
+int sys_call_count = 0;
 
 void
 syscall(void)
 {
   int num;
   struct proc *p = myproc();
+
+  sys_call_count++;
 
   num = p->trapframe->a7;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {

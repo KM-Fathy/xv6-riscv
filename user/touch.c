@@ -1,8 +1,9 @@
 #include "kernel/types.h"
 #include "kernel/fcntl.h"
 #include "user/user.h"
+#include "kernel/fs.h"
 
-
+//TODO: find file name length
 int main( int argc ,char *argv[])
 {
   if(strcmp(argv[1], "?") == 0) {
@@ -17,7 +18,11 @@ int main( int argc ,char *argv[])
     close(file);
     exit(0);
   }
-
+  // if(strlen(argv[1]) > DIRSIZ-1)
+  // {
+  //   printf("Error: file name too long\n");
+  //   exit(0);
+  // }
   file = open(argv[1], O_CREATE);
   if(file < 0)
   {

@@ -23,6 +23,9 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int kbdint(void);
+int countsyscall(void);
+int getppid(void);
+int datetime(void);
 
 // ulib.c
 int stat(const char*, struct stat*);
