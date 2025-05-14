@@ -1,4 +1,6 @@
 struct stat;
+struct dt;
+struct procinfo;
 
 // system calls
 int fork(void);
@@ -25,7 +27,9 @@ int uptime(void);
 int kbdint(void);
 int countsyscall(void);
 int getppid(void);
-int datetime(void);
+int datetime(struct dt *r);
+int randLGC(void);
+int getptable(int nproc, struct procinfo *buffer);
 
 // ulib.c
 int stat(const char*, struct stat*);
