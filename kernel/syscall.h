@@ -27,3 +27,5 @@
 #define SYS_randLGC 26
 #define SYS_getptable 27
 #define SYS_waitx 28
+#define SYS_set_priority 29
+#define SYS_get_priority 30

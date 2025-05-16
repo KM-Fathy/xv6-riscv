@@ -147,11 +147,10 @@ found:
   p->context.sp = p->kstack + PGSIZE;
 
   // initialize new variables here
-  acquire(&tickslock);
   p->creation_time = ticks;
   p->termination_time = ticks;
-  release(&tickslock);
   p->run_time = 0;
+  p->priority = 10;
 
 
   return p;
@@ -178,11 +177,11 @@ freeproc(struct proc *p)
   p->xstate = 0;
   p->state = UNUSED;
 
-  acquire(&tickslock);
+
   p->creation_time = ticks;
   p->termination_time = ticks;
-  release(&tickslock);
   p->run_time = 0;
+  p->priority = 10;
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -476,7 +475,7 @@ waitx(uint64 addr, int *tatime, int *wtime)
           pid = pp->pid;
           // Calculate metrics
           *tatime = pp->termination_time - pp->creation_time;
-          *wtime = *tatime - pp->run_time;
+          *wtime =  *tatime - pp->run_time;
           if(addr != 0 && copyout(p->pagetable, addr, (char *)&pp->xstate,
                                   sizeof(pp->xstate)) < 0) {
             release(&pp->lock);
@@ -518,7 +517,7 @@ update_time()
   }
 }
 
-int sched_mode = SCHED_ROUND_ROBIN;  // Assign the chosen scheduler here
+int sched_mode = SCHED_PRIORITY;  // Assign the chosen scheduler here
 struct proc *choose_next_process() {
 
   struct proc *p;
@@ -529,11 +528,38 @@ struct proc *choose_next_process() {
         return p;
       }
   }
-  // else if (sched_mode == SCHED_FCFS) {
-  //   // TODO
-  //   return p;
-  // }
 
+  else if (sched_mode == SCHED_FCFS) {
+    int minCreationTime = __INT32_MAX__;
+    struct proc *minp = 0;
+
+    for(p = proc; p < &proc[NPROC]; p++) {
+      if (p->state == RUNNABLE)
+      {
+        if(p->creation_time < minCreationTime)
+        {
+          minCreationTime = p->creation_time;
+          minp = p;
+        }
+      }
+    }
+    return minp;
+  }
+
+ else if (sched_mode == SCHED_PRIORITY) {
+  int min_priority = __INT32_MAX__;//mycpu()->proc->priority;
+  struct proc *prp = 0;
+
+  for (p = proc; p < &proc[NPROC]; p++) {
+    if (p->state == RUNNABLE) {
+      if (p->priority < min_priority) {
+        min_priority = p->priority;
+        prp = p;
+      }
+    }
+  }
+  return prp;
+}
   // Add more else statements each time you create a new scheduler
 
   return 0;
@@ -570,6 +596,7 @@ scheduler(void)
         p->state = RUNNING;
         c->proc = p;
         swtch(&c->context, &p->context);
+        //printf("highest pr=%d\n", p->priority);
 
         // Process is done running for now.
         // It should have changed its p->state before coming back.
@@ -837,4 +864,38 @@ sys_getptable(void) {
     return 0;
 
   return 1;
+}
+
+int
+set_priority(int pid, int new_priority)
+{
+  struct proc *p;
+  for (p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if (p->pid == pid) {
+      p->priority = new_priority;
+      release(&p->lock);
+      return 0; // success
+    }
+    release(&p->lock);
+  }
+  return -1; // PID not found
+}
+
+int
+get_priority(int pid)
+{
+  struct proc *p;
+
+  for (p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if (p->pid == pid) {
+      int prio = p->priority;
+      release(&p->lock);
+      return prio;
+    }
+    release(&p->lock);
+  }
+
+  return -1; // PID not found
 }

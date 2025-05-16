@@ -3,22 +3,24 @@
 #include "user/user.h"
 #include "kernel/fcntl.h"
 
+#define NPROCESS 2
 
 int main(int argc, char *argv[]) {
 
   int pid;
-  int k, nprocess = 10;
-  int z, steps = 1000000;
+  int k;
+  int z, steps = 1000000;//2000000;
   char buffer_src[1024], buffer_dst[1024];
   int total_ta=0, total_w=0;
+  int priorities[NPROCESS]={5, 1};
 
 
-  for (k = 0; k < nprocess; k++) {
+  for (k = 0; k < NPROCESS; k++) {
     // ensure different creation times (proc->ctime)
     // needed for properly testing FCFS scheduling
     sleep(2);
 
-
+    //steps /= 2;
     pid = fork();
     if (pid < 0) {
       printf("%d failed in fork!\n", getpid());
@@ -27,7 +29,8 @@ int main(int argc, char *argv[]) {
     }
     else if (pid == 0) {
       // child
-      printf("[pid=%d] created\n", getpid());
+      set_priority(getpid(), priorities[k]); // higher priority for earlier processes
+      printf("[pid=%d] created  priority=%d\n", getpid(), priorities[k]);
 
       for (z = 0; z < steps; z += 1) {
          // copy buffers one inside the other and back
@@ -39,7 +42,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  for (k = 0; k < nprocess; k++) {
+  for (k = 0; k < NPROCESS; k++) {
     int tatime, wtime;
     pid = waitx(0, &tatime, &wtime);
     total_ta += tatime;
@@ -47,8 +50,8 @@ int main(int argc, char *argv[]) {
     printf("[pid=%d] terminated   TA=%d   W=%d\n", pid, tatime, wtime);
   }
 
-  int avg_ta = total_ta/nprocess;
-  int avg_w = total_w/nprocess; //total_w/(float)nprocess
+  int avg_ta = total_ta/NPROCESS;
+  int avg_w = total_w/NPROCESS; //total_w/(float)nprocess
   printf("Avg turnaround time = %d,  Avg waiting time = %d\n", avg_ta, avg_w);
 
   exit(0);

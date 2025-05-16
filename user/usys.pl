@@ -43,3 +43,5 @@ entry("datetime");
 entry("randLGC");
 entry("getptable");
 entry("waitx");
+entry("set_priority");
+entry("get_priority");

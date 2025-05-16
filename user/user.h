@@ -31,6 +31,8 @@ int datetime(struct dt *r);
 int randLGC(void);
 int getptable(int nproc, struct procinfo *buffer);
 int waitx(int*, int *tatime, int *wtime);
+int set_priority(int pid, int new_priority);
+int get_priority(int pid);
 
 
 // ulib.c

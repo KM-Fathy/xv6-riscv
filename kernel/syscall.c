@@ -108,6 +108,8 @@ extern uint64 sys_datetime(void);
 extern uint64 sys_randLGC(void);
 extern uint64 sys_getptable(void);
 extern uint64 sys_waitx(void);
+extern uint64 sys_set_priority(void);
+extern uint64 sys_get_priority(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -140,6 +142,8 @@ static uint64 (*syscalls[])(void) = {
 [SYS_randLGC]  sys_randLGC,
 [SYS_getptable]  sys_getptable,
 [SYS_waitx]  sys_waitx,
+[SYS_set_priority]  sys_set_priority,
+[SYS_get_priority]  sys_get_priority,
 };
 
 int sys_call_count = 0;
