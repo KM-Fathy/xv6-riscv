@@ -42,3 +42,4 @@ entry("getppid");
 entry("datetime");
 entry("randLGC");
 entry("getptable");
+entry("waitx");

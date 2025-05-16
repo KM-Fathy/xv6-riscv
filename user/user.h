@@ -30,6 +30,8 @@ int getppid(void);
 int datetime(struct dt *r);
 int randLGC(void);
 int getptable(int nproc, struct procinfo *buffer);
+int waitx(int*, int *tatime, int *wtime);
+
 
 // ulib.c
 int stat(const char*, struct stat*);

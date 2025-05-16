@@ -153,6 +153,7 @@ UPROGS=\
 	$U/_ps\
 	$U/_datetime\
 	$U/_rand\
+	$U/_generateproc\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

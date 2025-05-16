@@ -107,6 +107,7 @@ extern uint64 sys_getppid(void);
 extern uint64 sys_datetime(void);
 extern uint64 sys_randLGC(void);
 extern uint64 sys_getptable(void);
+extern uint64 sys_waitx(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -138,6 +139,7 @@ static uint64 (*syscalls[])(void) = {
 [SYS_datetime]  sys_datetime,
 [SYS_randLGC]  sys_randLGC,
 [SYS_getptable]  sys_getptable,
+[SYS_waitx]  sys_waitx,
 };
 
 int sys_call_count = 0;

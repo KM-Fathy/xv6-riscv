@@ -97,3 +97,24 @@ sys_getppid(void)
 {
   return myproc()->parent->pid;
 }
+
+//used to measure scheduler metrics
+uint64
+sys_waitx(void)
+{
+  uint64 tatime_addr, wtime_addr;
+  uint64 p;
+  argaddr(0, &p);
+  argaddr(1, &tatime_addr);
+  argaddr(2, &wtime_addr);
+
+  int tatime, wtime;
+  int pid = waitx(p, &tatime, &wtime);
+
+  if (copyout(myproc()->pagetable, tatime_addr, (char *)&tatime, sizeof(int)) < 0)
+    return -1;
+  if (copyout(myproc()->pagetable, wtime_addr, (char *)&wtime, sizeof(int)) < 0)
+    return -1;
+
+  return pid;
+}

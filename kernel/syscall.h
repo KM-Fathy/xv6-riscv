@@ -26,3 +26,4 @@
 #define SYS_datetime 25
 #define SYS_randLGC 26
 #define SYS_getptable 27
+#define SYS_waitx 28

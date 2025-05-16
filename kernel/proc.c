@@ -146,6 +146,14 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  // initialize new variables here
+  acquire(&tickslock);
+  p->creation_time = ticks;
+  p->termination_time = ticks;
+  release(&tickslock);
+  p->run_time = 0;
+
+
   return p;
 }
 
@@ -169,6 +177,12 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+
+  acquire(&tickslock);
+  p->creation_time = ticks;
+  p->termination_time = ticks;
+  release(&tickslock);
+  p->run_time = 0;
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -279,6 +293,7 @@ growproc(int n)
 int
 fork(void)
 {
+
   int i, pid;
   struct proc *np;
   struct proc *p = myproc();
@@ -322,6 +337,7 @@ fork(void)
   np->state = RUNNABLE;
   release(&np->lock);
 
+  //printf("parent ticks now = %d\n", ticks);
   return pid;
 }
 
@@ -374,6 +390,8 @@ exit(int status)
   wakeup(p->parent);
 
   acquire(&p->lock);
+
+  p->termination_time = ticks;
 
   p->xstate = status;
   p->state = ZOMBIE;
@@ -434,6 +452,93 @@ wait(uint64 addr)
   }
 }
 
+
+int
+waitx(uint64 addr, int *tatime, int *wtime)
+{
+  struct proc *pp;
+  int havekids, pid;
+  struct proc *p = myproc();
+
+  acquire(&wait_lock);
+
+  for(;;){
+    // Scan through table looking for exited children.
+    havekids = 0;
+    for(pp = proc; pp < &proc[NPROC]; pp++){
+      if(pp->parent == p){
+        // make sure the child isn't still in exit() or swtch().
+        acquire(&pp->lock);
+
+        havekids = 1;
+        if(pp->state == ZOMBIE){
+          // Found one.
+          pid = pp->pid;
+          // Calculate metrics
+          *tatime = pp->termination_time - pp->creation_time;
+          *wtime = *tatime - pp->run_time;
+          if(addr != 0 && copyout(p->pagetable, addr, (char *)&pp->xstate,
+                                  sizeof(pp->xstate)) < 0) {
+            release(&pp->lock);
+            release(&wait_lock);
+            return -1;
+          }
+          freeproc(pp);
+          release(&pp->lock);
+          release(&wait_lock);
+          return pid;
+        }
+        release(&pp->lock);
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || killed(p)){
+      release(&wait_lock);
+      return -1;
+    }
+
+    // Wait for a child to exit.
+    sleep(p, &wait_lock);  //DOC: wait-sleep
+  }
+}
+
+
+void
+update_time()
+{
+  struct proc* p;
+  for (p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if (p->state == RUNNING) {
+      p->run_time++;
+    }
+
+    release(&p->lock);
+  }
+}
+
+int sched_mode = SCHED_ROUND_ROBIN;  // Assign the chosen scheduler here
+struct proc *choose_next_process() {
+
+  struct proc *p;
+
+  if(sched_mode == SCHED_ROUND_ROBIN) {
+    for(p = proc; p < &proc[NPROC]; p++) {
+      if (p->state == RUNNABLE)
+        return p;
+      }
+  }
+  // else if (sched_mode == SCHED_FCFS) {
+  //   // TODO
+  //   return p;
+  // }
+
+  // Add more else statements each time you create a new scheduler
+
+  return 0;
+}
+
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
@@ -455,12 +560,13 @@ scheduler(void)
     intr_on();
 
     int found = 0;
-    for(p = proc; p < &proc[NPROC]; p++) {
+
+    p = choose_next_process();
+
+    if(p != 0) {
       acquire(&p->lock);
-      if(p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
+
+      if (p->state == RUNNABLE) {
         p->state = RUNNING;
         c->proc = p;
         swtch(&c->context, &p->context);
