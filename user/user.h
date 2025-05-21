@@ -28,7 +28,7 @@ int kbdint(void);
 int countsyscall(void);
 int getppid(void);
 int datetime(struct dt *r);
-int randLGC(void);
+int randLCG(void);
 int getptable(int nproc, struct procinfo *buffer);
 int waitx(int*, int *tatime, int *wtime);
 int set_priority(int pid, int new_priority);

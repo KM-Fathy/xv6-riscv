@@ -24,7 +24,7 @@
 #define SYS_countsyscall 23
 #define SYS_getppid 24
 #define SYS_datetime 25
-#define SYS_randLGC 26
+#define SYS_randLCG 26
 #define SYS_getptable 27
 #define SYS_waitx 28
 #define SYS_set_priority 29

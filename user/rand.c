@@ -4,6 +4,6 @@
 
 
 int main( int argc ,char *argv[]){
-  printf("%d\n", randLGC());
+  printf("%d\n", randLCG());
   exit(0);
 }

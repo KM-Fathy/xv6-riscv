@@ -105,7 +105,7 @@ extern uint64 sys_kbdint(void);
 extern uint64 sys_countsyscall(void);
 extern uint64 sys_getppid(void);
 extern uint64 sys_datetime(void);
-extern uint64 sys_randLGC(void);
+extern uint64 sys_randLCG(void);
 extern uint64 sys_getptable(void);
 extern uint64 sys_waitx(void);
 extern uint64 sys_set_priority(void);
@@ -139,7 +139,7 @@ static uint64 (*syscalls[])(void) = {
 [SYS_countsyscall]  sys_countsyscall,
 [SYS_getppid]  sys_getppid,
 [SYS_datetime]  sys_datetime,
-[SYS_randLGC]  sys_randLGC,
+[SYS_randLCG]  sys_randLCG,
 [SYS_getptable]  sys_getptable,
 [SYS_waitx]  sys_waitx,
 [SYS_set_priority]  sys_set_priority,

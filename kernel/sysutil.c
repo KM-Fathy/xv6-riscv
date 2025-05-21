@@ -17,9 +17,6 @@
 
 extern uint64 kbd_int_count;
 extern uint64 sys_call_count;
-//extern uint64 BOOT_EPOCH;
-
-static uint rand_seed = 1;
 
 uint64
 sys_kbdint() {
@@ -31,14 +28,16 @@ sys_countsyscall() {
   return sys_call_count;
 }
 
+static uint rand_seed = 1;
 uint64
-sys_randLGC(void)
+sys_randLCG(void)
 {
   if (rand_seed == 1)
     rand_seed = *MTIME;
 
-  rand_seed = rand_seed * 1103515245 + 12345;
-  return (rand_seed / 65536) % 32768; // 15-bit random number
+  rand_seed = rand_seed * 1103515245 + 12345; //used to generate 31-bit number
+  //rand_seed/2^16 ---> make the number 15 bits
+  return (rand_seed / 65536) % 32768; // 15-bit random number in the range [0, 32767]
 }
 
 
@@ -99,7 +98,7 @@ sys_datetime(void)
 
   // read machine time (ticks)
   uint64 t = *MTIME;              // fault-safe after kvmmap
-  uint64 secs_since_boot = t / 10000000;
+  uint64 secs_since_boot = t / 10000000;  //clock frequency = 10 MHz (10 million ticks/sec)
   uint64 now = BOOT_EPOCH + secs_since_boot;
 
   // convert to calendar date
@@ -110,5 +109,4 @@ sys_datetime(void)
     return -1;
 
   return 0;
-  //return BOOT_EPOCH;//*MTIME / 10000000;
 }

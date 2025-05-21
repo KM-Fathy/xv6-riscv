@@ -114,7 +114,6 @@ struct proc {
 
   uint creation_time;          // Ticks when process was created
   uint run_time;               // How long the process has run
-  uint termination_time;       // Ticks when process was terminated
-  uint wait_time;
+  uint wait_time;              // How long the process has been waiting (not running)
   int priority;                // Lower value = higher priority
 };

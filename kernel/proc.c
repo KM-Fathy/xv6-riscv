@@ -148,7 +148,6 @@ found:
 
   // initialize new variables here
   p->creation_time = ticks;
-  //p->termination_time = ticks;
   p->run_time = 0;
   p->wait_time = 0;
   p->priority = 1;
@@ -178,11 +177,6 @@ freeproc(struct proc *p)
   p->xstate = 0;
   p->state = UNUSED;
 
-
-  //p->creation_time = ticks;
-  p->termination_time = ticks;
-  //p->run_time = 0;
-  //p->priority = 10;
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -337,7 +331,6 @@ fork(void)
   np->state = RUNNABLE;
   release(&np->lock);
 
-  //printf("parent ticks now = %d\n", ticks);
   return pid;
 }
 
@@ -475,8 +468,8 @@ waitx(uint64 addr, int *tatime, int *wtime)
           // Found one.
           pid = pp->pid;
           // Calculate metrics
-          *tatime = ticks - pp->creation_time;
-          *wtime = pp->wait_time; //*tatime - pp->run_time;
+          *tatime = ticks - pp->creation_time; //Turnanround time = termination_time - creation_time
+          *wtime = pp->wait_time;
           if(addr != 0 && copyout(p->pagetable, addr, (char *)&pp->xstate,
                                   sizeof(pp->xstate)) < 0) {
             release(&pp->lock);
@@ -539,7 +532,7 @@ struct proc *choose_next_process(struct proc *cpu_proc) {
 
     if(cpu_proc != 0)
     {
-      min_creation_time= cpu_proc->priority;
+      min_creation_time = cpu_proc->creation_time;
       minp = cpu_proc;
     }
 
@@ -557,7 +550,7 @@ struct proc *choose_next_process(struct proc *cpu_proc) {
   }
 
  else if (sched_mode == SCHED_PRIORITY) {
-  int min_priority = __INT32_MAX__;//mycpu()->proc->priority;
+  int min_priority = __INT32_MAX__;
   struct proc *prp = 0;
 
   if(cpu_proc != 0)
@@ -609,16 +602,9 @@ scheduler(void)
       acquire(&p->lock);
 
       if (p->state == RUNNABLE) {
-        // printf("\n\nCurrent cpus:\n");
-        // for(int i = 0; i<NCPU-2; i++)
-        // {
-        //   printf("core %d : proc %d\n", i, cpus[i].proc->pid);
-        //   // printf("core %d : proc %d\n", i, cpus[i].proc);
-        // }
         p->state = RUNNING;
         c->proc = p;
         swtch(&c->context, &p->context);
-        //printf("highest pr=%d\n", p->priority);
 
         // Process is done running for now.
         // It should have changed its p->state before coming back.

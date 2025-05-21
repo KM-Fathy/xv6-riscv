@@ -6,14 +6,14 @@
 #define NPROCESS 4
 
 int main(int argc, char *argv[]) {
-  //set_priority(getpid(), 1);
+
   int pid;
   int k;
-  int z;//, steps = 1000000;//2000000;
+  int z;
   char buffer_src[1024], buffer_dst[1024];
   int total_ta=0, total_w=0;
   int priorities[NPROCESS]={5, 2, 7, 1};
-  int stepss[NPROCESS]={10000000, 10000000, 10000000, 1000000};
+  int steps[NPROCESS]={10000000, 10000000, 10000000, 1000000};
 
 
   for (k = 0; k < NPROCESS; k++) {
@@ -21,7 +21,6 @@ int main(int argc, char *argv[]) {
     // needed for properly testing FCFS scheduling
     sleep(2);
 
-    //steps /= 2;
     pid = fork();
     if (pid < 0) {
       printf("%d failed in fork!\n", getpid());
@@ -30,10 +29,9 @@ int main(int argc, char *argv[]) {
     }
     else if (pid == 0) {
       // child
-      set_priority(getpid(), priorities[k]); // higher priority for earlier processes
+      set_priority(getpid(), priorities[k]);
       printf("[pid=%d] created  priority=%d\n", getpid(), priorities[k]);
-      //steps = randLGC();
-      for (z = 0; z < stepss[k]; z += 1) {
+      for (z = 0; z < steps[k]; z += 1) {
          // copy buffers one inside the other and back
          // used for wasting cpu time
          memmove(buffer_dst, buffer_src, 1024);
@@ -52,7 +50,7 @@ int main(int argc, char *argv[]) {
   }
 
   int avg_ta = total_ta/NPROCESS;
-  int avg_w = total_w/NPROCESS; //total_w/(float)nprocess
+  int avg_w = total_w/NPROCESS;
   printf("Avg turnaround time = %d,  Avg waiting time = %d\n", avg_ta, avg_w);
 
   exit(0);

@@ -40,7 +40,7 @@ entry("kbdint");
 entry("countsyscall");
 entry("getppid");
 entry("datetime");
-entry("randLGC");
+entry("randLCG");
 entry("getptable");
 entry("waitx");
 entry("set_priority");
