@@ -9,9 +9,9 @@ int main( int argc ,char *argv[])
 
   struct procinfo ptable[64];
 
-  if (!getptable(64, ptable)) {
+  if (getptable(64, ptable) == 0) {
     printf("getptable failed\n");
-    exit(1);
+    exit(0);
   }
 
   printf("PID PPID STATE SIZE   NAME\n");

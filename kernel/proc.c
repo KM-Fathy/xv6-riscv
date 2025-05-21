@@ -148,9 +148,10 @@ found:
 
   // initialize new variables here
   p->creation_time = ticks;
-  p->termination_time = ticks;
+  //p->termination_time = ticks;
   p->run_time = 0;
-  p->priority = 10;
+  p->wait_time = 0;
+  p->priority = 1;
 
 
   return p;
@@ -178,10 +179,10 @@ freeproc(struct proc *p)
   p->state = UNUSED;
 
 
-  p->creation_time = ticks;
+  //p->creation_time = ticks;
   p->termination_time = ticks;
-  p->run_time = 0;
-  p->priority = 10;
+  //p->run_time = 0;
+  //p->priority = 10;
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -390,7 +391,7 @@ exit(int status)
 
   acquire(&p->lock);
 
-  p->termination_time = ticks;
+  //p->termination_time = ticks;
 
   p->xstate = status;
   p->state = ZOMBIE;
@@ -474,8 +475,8 @@ waitx(uint64 addr, int *tatime, int *wtime)
           // Found one.
           pid = pp->pid;
           // Calculate metrics
-          *tatime = pp->termination_time - pp->creation_time;
-          *wtime =  *tatime - pp->run_time;
+          *tatime = ticks - pp->creation_time;
+          *wtime = pp->wait_time; //*tatime - pp->run_time;
           if(addr != 0 && copyout(p->pagetable, addr, (char *)&pp->xstate,
                                   sizeof(pp->xstate)) < 0) {
             release(&pp->lock);
@@ -512,13 +513,16 @@ update_time()
     if (p->state == RUNNING) {
       p->run_time++;
     }
+    else if (p->state == SLEEPING || p->state == RUNNABLE) {
+      p->wait_time++;
+    }
 
     release(&p->lock);
   }
 }
 
 int sched_mode = SCHED_PRIORITY;  // Assign the chosen scheduler here
-struct proc *choose_next_process() {
+struct proc *choose_next_process(struct proc *cpu_proc) {
 
   struct proc *p;
 
@@ -530,15 +534,21 @@ struct proc *choose_next_process() {
   }
 
   else if (sched_mode == SCHED_FCFS) {
-    int minCreationTime = __INT32_MAX__;
+    int min_creation_time = __INT32_MAX__;
     struct proc *minp = 0;
+
+    if(cpu_proc != 0)
+    {
+      min_creation_time= cpu_proc->priority;
+      minp = cpu_proc;
+    }
 
     for(p = proc; p < &proc[NPROC]; p++) {
       if (p->state == RUNNABLE)
       {
-        if(p->creation_time < minCreationTime)
+        if(p->creation_time < min_creation_time)
         {
-          minCreationTime = p->creation_time;
+          min_creation_time = p->creation_time;
           minp = p;
         }
       }
@@ -549,6 +559,12 @@ struct proc *choose_next_process() {
  else if (sched_mode == SCHED_PRIORITY) {
   int min_priority = __INT32_MAX__;//mycpu()->proc->priority;
   struct proc *prp = 0;
+
+  if(cpu_proc != 0)
+  {
+    min_priority = cpu_proc->priority;
+    prp = cpu_proc;
+  }
 
   for (p = proc; p < &proc[NPROC]; p++) {
     if (p->state == RUNNABLE) {
@@ -587,12 +603,18 @@ scheduler(void)
 
     int found = 0;
 
-    p = choose_next_process();
+    p = choose_next_process(c->proc);
 
     if(p != 0) {
       acquire(&p->lock);
 
       if (p->state == RUNNABLE) {
+        // printf("\n\nCurrent cpus:\n");
+        // for(int i = 0; i<NCPU-2; i++)
+        // {
+        //   printf("core %d : proc %d\n", i, cpus[i].proc->pid);
+        //   // printf("core %d : proc %d\n", i, cpus[i].proc);
+        // }
         p->state = RUNNING;
         c->proc = p;
         swtch(&c->context, &p->context);
@@ -822,7 +844,7 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    printf("%d %s %s", p->pid, state, p->name);
+    printf("%d %s %s %d %d %d %d", p->pid, state, p->name, p->creation_time, p->wait_time, p->run_time, p->priority);
     printf("\n");
   }
 }
@@ -838,7 +860,6 @@ sys_getptable(void) {
   argaddr(1, &buf);
   if(n<1 || buf == 0)
     return 0;
-
 
   struct procinfo ptable[n];
   int count = 0;

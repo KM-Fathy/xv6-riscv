@@ -7,29 +7,33 @@
 void find(char *path, char *target, int* found) {
   char buf[512], *p;
   int fd;
-  struct dirent de;
+  struct dirent de;  //file or folder to check name
   struct stat st;
 
+  //open to check if path exists and get id of file/folder
   fd = open(path, O_RDONLY);
-  if (fd < 0) return;
+  if (fd < 0) return;  //path does not exist
 
+  //get status of file/folder
   fstat(fd, &st);
+  //close and return if the openned entry is not a folder
   if (st.type != T_DIR) {
       close(fd);
-    return;
+      return;
   }
 
   strcpy(buf, path);
   p = buf + strlen(buf);
-  *p++ = '/';
+  *p++ = '/'; //add '/' at the end of the path
 
   while (read(fd, &de, sizeof(de)) == sizeof(de)) {
-    if (de.inum == 0) continue;
+    if (de.inum == 0) continue;  //entry is empty (deleted)
+    //. is current directory, .. is previous directory, they exist in every folder
     if (!strcmp(de.name, ".") || !strcmp(de.name, "..")) continue;
 
-    memmove(p, de.name, DIRSIZ);
-    p[DIRSIZ] = 0;
+    strcpy(p, de.name);
 
+    //stat opens the file/folder to chech if it exists
     if (stat(buf, &st) < 0) continue;
 
     if (st.type == T_DIR) {

@@ -6,7 +6,8 @@
 #include "spinlock.h"
 #include "proc.h"
 
-
+//volatile tells the compiler not to optimize reads from this pointer
+//because the value can change at any time (e.g., the timer keeps counting up).
 #define MTIME ((volatile uint64 *)CLINT_MTIME)
 
 #ifndef BOOT_EPOCH
@@ -42,7 +43,6 @@ sys_randLGC(void)
 
 
 
-//MOVE TO NEW FILE
 static int is_leap(int y) {
   return (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0));
 }
@@ -81,7 +81,7 @@ void unix_to_date(uint64 ts, struct dt *r) {
   r->year = y;
   r->month = m + 1;
   r->day = days + 1;
-  r->hour = hr;
+  r->hour = hr + 3; //UTC+3
   r->minute = min;
   r->second = sec;
 }
@@ -97,18 +97,10 @@ sys_datetime(void)
   argaddr(0, &dst);
 
 
-  // seed once on first call
-  static int inited = 0;
-  static uint64 seed;
-  if (!inited) {
-    seed = BOOT_EPOCH;
-    inited = 1;
-  }
-
   // read machine time (ticks)
   uint64 t = *MTIME;              // fault-safe after kvmmap
   uint64 secs_since_boot = t / 10000000;
-  uint64 now = seed + secs_since_boot;
+  uint64 now = BOOT_EPOCH + secs_since_boot;
 
   // convert to calendar date
   unix_to_date(now, &r);

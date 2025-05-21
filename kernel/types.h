@@ -18,7 +18,7 @@ struct dt {
   int second;
 };
 
-#define PNAME_LEN 16 //???
+#define PNAME_LEN 16
 
 struct procinfo {
   int pid;

@@ -5,13 +5,13 @@
 
 int main( int argc ,char *argv[])
 {
-  if(argc == 2 && strcmp(argv[1], "?") == 0) {
+  if(strcmp(argv[1], "?") == 0) {
     printf("Usage: add number1 number2\n");
     exit(0);
   }
 
   if(argc != 3) {
-    printf("You can only add two numbers\n");
+    printf("Error: You can only add two numbers\n");
     exit(0);
   }
 
@@ -21,7 +21,7 @@ int main( int argc ,char *argv[])
     int n2 = atoi(argv[2]);
     int sum = n1+n2;
 
-    printf("sum= %d\n",sum );
+    printf("sum = %d\n",sum );
   }
   else
   {

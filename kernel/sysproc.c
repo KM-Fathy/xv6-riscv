@@ -114,7 +114,7 @@ sys_waitx(void)
   if (copyout(myproc()->pagetable, tatime_addr, (char *)&tatime, sizeof(int)) < 0)
     return -1;
   if (copyout(myproc()->pagetable, wtime_addr, (char *)&wtime, sizeof(int)) < 0)
-    return -1;
+  return -1;
 
   return pid;
 }
@@ -135,3 +135,24 @@ sys_get_priority(void)
   argint(0, &pid);
   return get_priority(pid);
 }
+
+  // uint64
+  // sys_getptable(void) {
+  //   int n;
+  //   uint64 buf = 0; // user pointer to struct procinfo array
+
+  //   //pass arguments from user space to kernel space
+  //   argint(0, &n);
+  //   argaddr(1, &buf);
+
+  //   if(n < 1 || buf == 0)
+  //     return 0;
+
+  //   struct procinfo ptable[n];
+  //   getptable(n, ptable);
+
+  //   if (copyout(myproc()->pagetable, buf, (char *)ptable, sizeof(struct procinfo) * n) < 0)
+  //     return 0;
+
+  //   return 1;
+  // }

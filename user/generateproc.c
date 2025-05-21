@@ -3,16 +3,17 @@
 #include "user/user.h"
 #include "kernel/fcntl.h"
 
-#define NPROCESS 2
+#define NPROCESS 4
 
 int main(int argc, char *argv[]) {
-
+  //set_priority(getpid(), 1);
   int pid;
   int k;
-  int z, steps = 1000000;//2000000;
+  int z;//, steps = 1000000;//2000000;
   char buffer_src[1024], buffer_dst[1024];
   int total_ta=0, total_w=0;
-  int priorities[NPROCESS]={5, 1};
+  int priorities[NPROCESS]={5, 2, 7, 1};
+  int stepss[NPROCESS]={10000000, 10000000, 10000000, 1000000};
 
 
   for (k = 0; k < NPROCESS; k++) {
@@ -31,8 +32,8 @@ int main(int argc, char *argv[]) {
       // child
       set_priority(getpid(), priorities[k]); // higher priority for earlier processes
       printf("[pid=%d] created  priority=%d\n", getpid(), priorities[k]);
-
-      for (z = 0; z < steps; z += 1) {
+      //steps = randLGC();
+      for (z = 0; z < stepss[k]; z += 1) {
          // copy buffers one inside the other and back
          // used for wasting cpu time
          memmove(buffer_dst, buffer_src, 1024);
